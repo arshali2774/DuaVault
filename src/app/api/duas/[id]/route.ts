@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, dbToApp, appToDb, dbTagToApp } from "@/lib/supabase";
+import { dbToApp, appToDb, dbTagToApp } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Helper to fetch tags for a dua
-async function fetchTagsForDua(duaId: string) {
+async function fetchTagsForDua(supabase: SupabaseClient, duaId: string) {
   const { data: duaTags, error } = await supabase
     .from("dua_tags")
     .select("tags(*)")
@@ -22,6 +24,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
     const { id } = await params;
 
     const { data, error } = await supabase
@@ -37,7 +40,7 @@ export async function GET(
       throw error;
     }
 
-    const tags = await fetchTagsForDua(id);
+    const tags = await fetchTagsForDua(supabase, id);
 
     return NextResponse.json({ ...dbToApp(data), tags });
   } catch (error) {
@@ -55,6 +58,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
     const { id } = await params;
     const body = await request.json();
 
@@ -116,7 +120,7 @@ export async function PUT(
       }
     }
 
-    const tags = await fetchTagsForDua(id);
+    const tags = await fetchTagsForDua(supabase, id);
 
     return NextResponse.json({ ...dbToApp(data), tags });
   } catch (error) {
@@ -134,6 +138,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
     const { id } = await params;
 
     // Delete dua_tags first (foreign key constraint)

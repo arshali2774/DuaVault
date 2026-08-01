@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 interface ImportDua {
   title: string;
@@ -22,6 +22,7 @@ interface ImportData {
 // POST - Import duas from JSON
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const body: ImportData = await request.json();
 
     if (!body.duas || !Array.isArray(body.duas)) {

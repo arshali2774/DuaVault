@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 // GET - Fetch total count of duas
 export async function GET() {
   try {
+    const supabase = await createClient();
     const { count, error } = await supabase
       .from("duas")
       .select("*", { count: "exact", head: true });

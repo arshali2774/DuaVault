@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase, dbToApp } from "@/lib/supabase";
+import { dbToApp } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 // GET - Export all duas as JSON
 export async function GET() {
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("duas")
       .select("*")

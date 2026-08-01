@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase, dbToApp } from "@/lib/supabase";
+import { dbToApp } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import {
   calculateNextReview,
   simpleQualityToNumber,
@@ -9,6 +10,7 @@ import {
 // GET - Get duas due for practice
 export async function GET() {
   try {
+    const supabase = await createClient();
     const now = new Date().toISOString();
 
     // Get duas that are due for review (next_review_date <= now or null)
@@ -35,6 +37,7 @@ export async function GET() {
 // POST - Record practice result
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
     const { duaId, quality } = body as {
       duaId: string;

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase, dbTagToApp } from "@/lib/supabase";
+import { dbTagToApp } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 // GET /api/tags - Get all tags
 export async function GET() {
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("tags")
       .select("*")
@@ -27,6 +29,7 @@ export async function GET() {
 // POST /api/tags - Create a new tag
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
     const { name } = body;
 

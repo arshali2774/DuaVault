@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { supabase, dbToApp, dbTagToApp } from "@/lib/supabase";
+import { dbToApp } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { Navigation } from "@/components/navigation";
 import { DuaForm } from "@/components/dua-form";
 
@@ -9,6 +10,7 @@ interface EditDuaPageProps {
 
 export default async function EditDuaPage({ params }: EditDuaPageProps) {
   const { id } = await params;
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("duas")

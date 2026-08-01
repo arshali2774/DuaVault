@@ -5,7 +5,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Type for Dua from database (snake_case)
+// Type for Dua from database (snake_case). owner_id must never appear on
+// the app-facing Dua type below — dbToApp intentionally omits it.
 export interface DbDua {
   id: string;
   title: string;
@@ -20,6 +21,7 @@ export interface DbDua {
   interval: number;
   repetitions: number;
   next_review_date: string | null;
+  owner_id: string;
 }
 
 // Type for Dua in application (camelCase) - used by client components

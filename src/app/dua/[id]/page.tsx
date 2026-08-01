@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { supabase, dbToApp } from "@/lib/supabase";
+import { dbToApp } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { Navigation } from "@/components/navigation";
 import { Pencil, ArrowLeft, BookOpen } from "lucide-react";
 
@@ -10,6 +11,7 @@ interface DuaDetailPageProps {
 
 export default async function DuaDetailPage({ params }: DuaDetailPageProps) {
   const { id } = await params;
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("duas")

@@ -114,7 +114,7 @@ export function Navigation() {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/unlock";
+    window.location.href = "/login";
   };
 
   return (

@@ -13,9 +13,10 @@ npm run dev      # start dev server (localhost:3000)
 npm run build    # next build
 npm run start    # start production server
 npm run lint     # eslint
+npm run test:rls # RLS ownership boundary suite (requires local Supabase CLI instance via Docker)
 ```
 
-There is no test suite configured.
+There is no test suite for application code. There is one backend regression suite, the RLS ownership boundary tests — see `tests/rls/README.md` for what it covers and how to run it. Not wired into CI.
 
 ## Architecture
 

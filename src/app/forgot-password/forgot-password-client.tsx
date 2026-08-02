@@ -2,26 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function safeRedirectTarget(raw: string | null) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
-    return "/";
-  }
-  return raw;
-}
-
-export default function LoginClient() {
+export default function ForgotPasswordClient() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = safeRedirectTarget(searchParams.get("redirect"));
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,17 +18,16 @@ export default function LoginClient() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        router.push(redirectTo);
-        router.refresh();
+        setSubmitted(true);
       } else {
         setError(data.error || "Something went wrong. Please try again.");
       }
@@ -50,10 +38,25 @@ export default function LoginClient() {
     }
   };
 
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <p className="text-center max-w-sm">
+          If an account exists for <strong>{email}</strong>, a password reset
+          link has been sent. Check your inbox.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold">Log in to DuaVault</h1>
+        <h1 className="text-xl font-bold">Reset your password</h1>
+        <p className="text-sm text-muted-foreground">
+          Enter your email and we&apos;ll send you a link to reset your
+          password.
+        </p>
 
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -67,26 +70,15 @@ export default function LoginClient() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
         {error && <p className="text-destructive text-sm">{error}</p>}
 
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Logging in..." : "Log in"}
+          {isLoading ? "Sending..." : "Send reset link"}
         </Button>
 
         <p className="text-sm text-center">
-          <Link href="/forgot-password" className="underline">
-            Forgot your password?
+          <Link href="/login" className="underline">
+            Back to log in
           </Link>
         </p>
       </form>

@@ -1,44 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function safeRedirectTarget(raw: string | null) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
-    return "/";
-  }
-  return raw;
-}
-
-export default function LoginClient() {
-  const [email, setEmail] = useState("");
+export default function ResetPasswordClient() {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = safeRedirectTarget(searchParams.get("redirect"));
+  const code = searchParams.get("code");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ code, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        router.push(redirectTo);
+        router.push("/");
         router.refresh();
       } else {
         setError(data.error || "Something went wrong. Please try again.");
@@ -50,45 +48,52 @@ export default function LoginClient() {
     }
   };
 
+  if (!code) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <p className="text-center max-w-sm text-destructive">
+          This reset link is invalid or has expired. Please request a new
+          one from the login page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold">Log in to DuaVault</h1>
+        <h1 className="text-xl font-bold">Set a new password</h1>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            required
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">New password</Label>
           <Input
             id="password"
             type="password"
             required
+            autoFocus
+            minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm new password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            required
+            minLength={6}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
 
         {error && <p className="text-destructive text-sm">{error}</p>}
 
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Logging in..." : "Log in"}
+          {isLoading ? "Resetting..." : "Reset password"}
         </Button>
-
-        <p className="text-sm text-center">
-          <Link href="/forgot-password" className="underline">
-            Forgot your password?
-          </Link>
-        </p>
       </form>
     </div>
   );

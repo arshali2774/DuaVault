@@ -11,6 +11,10 @@ const publicRoutes = [
   "/login",
   "/api/auth/login",
   "/api/auth/logout",
+  "/forgot-password",
+  "/api/auth/forgot-password",
+  "/reset-password",
+  "/api/auth/reset-password",
 ];
 
 function isPublicRoute(pathname: string) {

@@ -89,6 +89,13 @@ export default function LoginClient() {
             Forgot your password?
           </Link>
         </p>
+
+        <p className="text-sm text-center">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="underline">
+            Sign up
+          </Link>
+        </p>
       </form>
     </div>
   );

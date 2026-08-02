@@ -14,7 +14,16 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    // Same fixed site-origin-over-request.url rationale as forgot-password/route.ts.
+    const siteOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+    const emailRedirectTo = new URL("/login", siteOrigin).toString();
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo },
+    });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });

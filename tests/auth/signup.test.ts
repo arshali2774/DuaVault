@@ -39,6 +39,10 @@ describe("POST /api/auth/signup", () => {
     const mailText = await waitForMailTo(email, { subjectContains: "Confirm" });
     const verifyLink = extractVerifyLink(mailText);
     expect(verifyLink).toContain("type=signup");
+    // Proves the route's emailRedirectTo actually reached Supabase, rather
+    // than Supabase silently falling back to site_url (see the comment on
+    // additional_redirect_urls in supabase/config.toml).
+    expect(verifyLink).toContain("redirect_to=http://127.0.0.1:3000/login");
 
     await followVerifyLink(verifyLink);
 

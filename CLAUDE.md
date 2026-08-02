@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-DuaVault — a personal, PIN-gated single-user web app for storing and memorizing duas (Islamic prayers), with fuzzy search and SM-2 spaced-repetition practice. Built with Next.js (App Router), TypeScript, Tailwind CSS v4, and Supabase Postgres.
+DuaVault — a multi-user web app for storing and memorizing duas (Islamic prayers), with fuzzy search and SM-2 spaced-repetition practice. Built with Next.js (App Router), TypeScript, Tailwind CSS v4, and Supabase Postgres/Auth.
 
 ## Commands
 
@@ -39,14 +39,16 @@ The DB uses snake_case columns (`arabic_text`, `next_review_date`, etc.). `src/l
 
 Always convert at the API route boundary; never leak snake_case fields into client components.
 
-### Auth: single shared PIN, not per-user accounts (migrating — see below)
+### Auth: per-user accounts via Supabase Auth
 
-There's no user model — the whole app is gated behind one PIN (`APP_PIN` env var) shared by whoever has it.
-- `src/middleware.ts` checks for a `duavault-auth` cookie on every route except `/unlock` and `/api/auth/verify`, redirecting to `/unlock?redirect=<path>` if missing/invalid.
-- `POST /api/auth/verify` (`src/app/api/auth/verify/route.ts`) checks the submitted PIN against `APP_PIN` and sets an httpOnly cookie containing a base64 JSON blob (`{authenticated, expires}`) valid 7 days. This is a lightweight gate, not real session security — don't treat the cookie as cryptographically signed.
-- `POST /api/auth/logout` clears the cookie.
+Every person who signs up owns their own independent set of duas — there is no shared PIN gate. Email/password only (no magic link, no OAuth); email verification is required before first sign-in; account recovery goes through Supabase's password-reset flow.
 
-**In progress:** the PIN gate is being replaced with real multi-user accounts via Supabase Auth (open signup). Decisions are being made and tracked as a Wayfinder map at [GitHub issue #1](https://github.com/arshali2774/DuaVault/issues/1) — check it (and `docs/adr/`) for the current state before assuming the description above still holds. This note should be replaced with the real Auth architecture once the migration lands.
+- `src/middleware.ts` is built around `@supabase/ssr`'s `getUser()` recipe: it refreshes the rolling session on every request, then redirects to `/login?redirect=<path>` if unauthenticated, for every route except the public auth surface (`/login`, `/signup`, `/forgot-password`, `/reset-password`, and their `/api/auth/*` counterparts).
+- Every API route that needs `auth.uid()` to resolve (for RLS) builds its own per-request Supabase server client via `createClient()` in `src/lib/supabase-server.ts` — never the shared module-level client from `src/lib/supabase.ts`, which can't carry per-request cookies.
+- `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `POST /api/auth/forgot-password`, and `POST /api/auth/reset-password` (under `src/app/api/auth/`) wrap the corresponding Supabase Auth SDK calls; the matching `/login`, `/signup`, `/forgot-password`, `/reset-password` pages are the client-facing forms.
+- Ownership: `duas.owner_id` (`uuid`, references `auth.users`, `ON DELETE CASCADE`) auto-fills via a DB-level default of `auth.uid()` — never sent by or trusted from the client. Row Level Security is the authoritative enforcement mechanism, not app-level filtering. `tags` stays a global, unscoped table shared by all users; `dua_tags` is scoped via RLS keyed off the parent dua's owner.
+
+Full architecture history and decisions live in the closed Wayfinder map at [GitHub issue #1](https://github.com/arshali2774/DuaVault/issues/1) and its spec, [issue #11](https://github.com/arshali2774/DuaVault/issues/11).
 
 ### Spaced repetition (SM-2)
 

@@ -4,8 +4,6 @@ import type { NextRequest } from "next/server";
 
 // Routes that don't require an authenticated Supabase session
 const publicRoutes = [
-  "/unlock",
-  "/api/auth/verify",
   "/signup",
   "/api/auth/signup",
   "/login",
@@ -24,7 +22,7 @@ function isPublicRoute(pathname: string) {
 }
 
 // Static assets served from /public (e.g. splash-screen images) must load
-// even for a logged-out visitor on /login or /unlock — gate on extension
+// even for a logged-out visitor on /login — gate on extension
 // rather than "any dot in the path" so a future dotted route segment can't
 // silently bypass auth.
 const staticAssetPattern =

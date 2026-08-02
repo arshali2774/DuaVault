@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:rls": "vitest run tests/rls"
+    "test:rls": "vitest run tests/rls",
+    "test:auth": "vitest run --config vitest.auth.config.ts tests/auth"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",

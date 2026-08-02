@@ -1,4 +1,5 @@
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { parseLocalSupabaseEnv } from "../support/parse-local-supabase-env";
 
 // This port is not arbitrary: it must match `site_url` and the
 // `/reset-password` entry in `additional_redirect_urls` in
@@ -34,35 +35,7 @@ function killTree(pid: number) {
 // the actual API routes (and their next/headers-backed cookie handling)
 // over HTTP instead of importing route handlers out of context.
 export default async function setup() {
-  let output: string;
-  try {
-    output = execFileSync("npx", ["supabase", "status", "-o", "env"], {
-      encoding: "utf-8",
-      shell: true,
-    });
-  } catch {
-    throw new Error(
-      "Local Supabase instance is not running. Start it with `npx supabase start` before running this suite."
-    );
-  }
-
-  for (const line of output.split("\n")) {
-    const match = line.match(/^([A-Z_]+)="(.*)"$/);
-    if (!match) continue;
-    const [, key, value] = match;
-    process.env[`AUTH_TEST_${key}`] = value;
-  }
-
-  if (
-    !process.env.AUTH_TEST_API_URL ||
-    !process.env.AUTH_TEST_ANON_KEY ||
-    !process.env.AUTH_TEST_SERVICE_ROLE_KEY ||
-    !process.env.AUTH_TEST_MAILPIT_URL
-  ) {
-    throw new Error(
-      "Could not parse API_URL/ANON_KEY/SERVICE_ROLE_KEY/MAILPIT_URL from `supabase status -o env`. Is the local Supabase instance up to date? Try `npx supabase stop` then `npx supabase start`."
-    );
-  }
+  parseLocalSupabaseEnv("AUTH_TEST_", ["API_URL", "ANON_KEY", "SERVICE_ROLE_KEY", "MAILPIT_URL"]);
 
   process.env.AUTH_TEST_BASE_URL = BASE_URL;
 

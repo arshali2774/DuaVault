@@ -9,15 +9,16 @@ DuaVault — a personal, PIN-gated single-user web app for storing and memorizin
 ## Commands
 
 ```bash
-npm run dev      # start dev server (localhost:3000)
-npm run build    # next build
-npm run start    # start production server
-npm run lint      # eslint
-npm run test:rls  # RLS ownership boundary suite (requires local Supabase CLI instance via Docker)
-npm run test:auth # auth API route smoke suite (same requirement; also spawns a `next dev` on :3000)
+npm run dev            # start dev server (localhost:3000)
+npm run build          # next build
+npm run start          # start production server
+npm run lint            # eslint
+npm run test:rls         # RLS ownership boundary suite (requires local Supabase CLI instance via Docker)
+npm run test:auth        # auth API route smoke suite (same requirement; also spawns a `next dev` on :3000)
+npm run test:middleware  # middleware session-gate suite (same requirement; no dev server needed)
 ```
 
-There is no test suite for application code. There are two backend regression suites: the RLS ownership boundary tests (`tests/rls/README.md`) and the auth API route smoke suite (`tests/auth/README.md`). Neither is wired into CI.
+There is no test suite for application code. There are three backend regression suites: the RLS ownership boundary tests (`tests/rls/README.md`), the auth API route smoke suite (`tests/auth/README.md`), and the middleware session-gate suite (`tests/middleware/README.md`). None are wired into CI.
 
 `supabase/config.toml`'s `auth.email.enable_confirmations` is `true` (not the local CLI's default of `false`) so the local instance mirrors the hosted project and the auth smoke suite can actually exercise "login blocked until verified" — this also means a local `npm run dev` signup no longer logs you in immediately; you'll need to confirm via the local Mailpit inbox (`http://127.0.0.1:54324`) first, same as the hosted app.
 

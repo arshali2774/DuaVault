@@ -48,7 +48,10 @@ connection info from `npx supabase status` at global-setup time.
 
 `vitest.auth.config.ts` is a separate config from the root
 `vitest.config.ts` (used by `test:rls`) specifically so its global setup —
-which spawns a dev server — never runs for suites that don't need one.
+which spawns a dev server — never runs for suites that don't need one. The
+`supabase status -o env` parsing itself is shared with `test:rls` and
+`test:middleware` via `tests/support/parse-local-supabase-env.ts`; only the
+dev-server spawn/teardown here is suite-specific.
 
 ## Notes
 

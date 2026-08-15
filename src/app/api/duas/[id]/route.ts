@@ -1,56 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbToApp, appToDb, dbTagToApp } from "@/lib/supabase";
+import { dbToApp, appToDb } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-// Helper to fetch tags for a dua
-async function fetchTagsForDua(supabase: SupabaseClient, duaId: string) {
-  const { data: duaTags, error } = await supabase
-    .from("dua_tags")
-    .select("tags(*)")
-    .eq("dua_id", duaId);
-
-  if (error) {
-    console.error("Failed to fetch tags:", error);
-    return [];
-  }
-
-  return duaTags?.map((dt) => dbTagToApp(dt.tags as any)).filter(Boolean) || [];
-}
-
-// GET - Fetch a single dua
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const supabase = await createClient();
-    const { id } = await params;
-
-    const { data, error } = await supabase
-      .from("duas")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json({ message: "Dua not found" }, { status: 404 });
-      }
-      throw error;
-    }
-
-    const tags = await fetchTagsForDua(supabase, id);
-
-    return NextResponse.json({ ...dbToApp(data), tags });
-  } catch (error) {
-    console.error("Failed to fetch dua:", error);
-    return NextResponse.json(
-      { message: "Failed to fetch dua" },
-      { status: 500 }
-    );
-  }
-}
+import { fetchDuaTagsForOne } from "@/lib/dua-tags";
 
 // PUT - Update a dua
 export async function PUT(
@@ -120,7 +71,7 @@ export async function PUT(
       }
     }
 
-    const tags = await fetchTagsForDua(supabase, id);
+    const tags = await fetchDuaTagsForOne(supabase, id);
 
     return NextResponse.json({ ...dbToApp(data), tags });
   } catch (error) {

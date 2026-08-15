@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { appToDb } from "@/lib/supabase";
 
 interface ImportDua {
   title: string;
@@ -60,19 +61,24 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Create new dua
+        // Create new dua. Content fields go through appToDb, the one seam
+        // shared with create/update; the 4 SM-2 fields below are import's
+        // own responsibility — restoring spaced-repetition progress from a
+        // backup is the one case where they're set explicitly at all.
         const { error } = await supabase.from("duas").insert([
           {
-            title: dua.title,
-            arabic_text: dua.arabicText,
-            translation: dua.translation,
-            transliteration: dua.transliteration || null,
-            description: dua.description || null,
-            source: dua.source || null,
-            ease_factor: dua.easeFactor || 2.5,
-            interval: dua.interval || 0,
-            repetitions: dua.repetitions || 0,
-            next_review_date: dua.nextReviewDate || null,
+            ...appToDb({
+              title: dua.title,
+              arabicText: dua.arabicText,
+              translation: dua.translation,
+              transliteration: dua.transliteration,
+              description: dua.description,
+              source: dua.source,
+            }),
+            ease_factor: dua.easeFactor ?? 2.5,
+            interval: dua.interval ?? 0,
+            repetitions: dua.repetitions ?? 0,
+            next_review_date: dua.nextReviewDate ?? null,
           },
         ]);
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Check } from "lucide-react";
 import type { Tag } from "@/lib/supabase";
+import { formatTagName } from "@/lib/dua-tags";
 
 interface TagSelectorProps {
   selectedTagIds: string[];
@@ -87,11 +88,6 @@ export function TagSelector({ selectedTagIds, onChange }: TagSelectorProps) {
       setShowInput(false);
       setNewTagName("");
     }
-  };
-
-  // Capitalize first letter for display
-  const formatTagName = (name: string) => {
-    return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
   if (isLoading) {

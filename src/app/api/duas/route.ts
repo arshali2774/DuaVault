@@ -1,37 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbToApp, appToDb, dbTagToApp } from "@/lib/supabase";
+import { dbToApp, appToDb } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchDuaTags } from "@/lib/dua-tags";
 
 const PAGE_SIZE = 20;
-
-// Helper to fetch tags for duas
-async function fetchTagsForDuas(supabase: SupabaseClient, duaIds: string[]) {
-  if (duaIds.length === 0) return {};
-
-  const { data: duaTags, error } = await supabase
-    .from("dua_tags")
-    .select("dua_id, tags(*)")
-    .in("dua_id", duaIds);
-
-  if (error) {
-    console.error("Failed to fetch tags:", error);
-    return {};
-  }
-
-  // Group tags by dua_id
-  const tagsByDuaId: Record<string, any[]> = {};
-  for (const dt of duaTags || []) {
-    if (!tagsByDuaId[dt.dua_id]) {
-      tagsByDuaId[dt.dua_id] = [];
-    }
-    if (dt.tags) {
-      // dt.tags is the joined tag object
-      tagsByDuaId[dt.dua_id].push(dbTagToApp(dt.tags as any));
-    }
-  }
-  return tagsByDuaId;
-}
 
 // GET - Fetch duas with pagination
 export async function GET(request: NextRequest) {
@@ -56,7 +28,7 @@ export async function GET(request: NextRequest) {
 
       // Fetch tags for all duas
       const duaIds = data?.map((d) => d.id) || [];
-      const tagsByDuaId = await fetchTagsForDuas(supabase, duaIds);
+      const tagsByDuaId = await fetchDuaTags(supabase, duaIds);
 
       const duas =
         data?.map((d) => ({
@@ -92,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch tags for these duas
     const duaIds = items.map((d) => d.id);
-    const tagsByDuaId = await fetchTagsForDuas(supabase, duaIds);
+    const tagsByDuaId = await fetchDuaTags(supabase, duaIds);
 
     // Convert snake_case to camelCase and add tags
     const duas = items.map((d) => ({
@@ -171,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch the tags for this dua
-    const tagsByDuaId = await fetchTagsForDuas(supabase, [data.id]);
+    const tagsByDuaId = await fetchDuaTags(supabase, [data.id]);
 
     return NextResponse.json(
       { ...dbToApp(data), tags: tagsByDuaId[data.id] || [] },

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import type { Tag } from "@/lib/supabase";
+import { formatTagName } from "@/lib/dua-tags";
 
 interface TagFilterProps {
   selectedTag: string | null;
@@ -30,11 +31,6 @@ export function TagFilter({ selectedTag, onTagChange }: TagFilterProps) {
 
     fetchTags();
   }, []);
-
-  // Capitalize first letter for display
-  const formatTagName = (name: string) => {
-    return name.charAt(0).toUpperCase() + name.slice(1);
-  };
 
   if (isLoading) {
     return (

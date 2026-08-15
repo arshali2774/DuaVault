@@ -5,7 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { DuaGrid } from "@/components/dua-card";
 import { SearchBar } from "@/components/search-bar";
 import { TagFilter } from "@/components/tag-filter";
-import { searchDuas } from "@/lib/search";
+import { createDuaSearcher, queryDuaSearcher } from "@/lib/search";
 import { GraduationCap, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Dua } from "@/lib/supabase";
@@ -13,6 +13,7 @@ import type { Dua } from "@/lib/supabase";
 export default function LibraryPage() {
   const [duas, setDuas] = useState<Dua[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -59,7 +60,14 @@ export default function LibraryPage() {
     };
 
     fetchCount();
-  }, [duas]);
+  }, []);
+
+  // Debounce the query that actually drives search execution, separate
+  // from the raw input value (which updates immediately for typing feedback).
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 175);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch all duas when search query changes (for client-side search)
   useEffect(() => {
@@ -125,52 +133,50 @@ export default function LibraryPage() {
     return () => observer.disconnect();
   }, [loadMore, hasMore, searchQuery]);
 
-  // Fetch due count for practice
-  useEffect(() => {
-    const fetchDueCount = async () => {
-      try {
-        const response = await fetch("/api/duas/practice");
-        if (response.ok) {
-          const data = await response.json();
-          setDueCount(data.length);
-        }
-      } catch (error) {
-        console.error("Failed to fetch due count:", error);
+  // Fetch due count for practice. Named/stable so it can also be called
+  // explicitly from handleDelete — the one other place due-ness can
+  // actually change — instead of keying an effect on `duas` wholesale
+  // (which would also (mis)fire on loadMore, which never affects due-ness).
+  const fetchDueCount = useCallback(async () => {
+    try {
+      const response = await fetch("/api/duas/practice");
+      if (response.ok) {
+        const data = await response.json();
+        setDueCount(data.length);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch due count:", error);
+    }
+  }, []);
 
+  useEffect(() => {
     fetchDueCount();
-  }, [duas]);
+  }, [fetchDueCount]);
 
-  // Filter duas based on search and tag
+  // Tag-filtered pool — the stable base that both display and search work
+  // from. Its own useMemo so the Fuse index below only rebuilds when this
+  // actually changes, not on every keystroke.
+  const searchPool = useMemo(() => {
+    const pool = allDuasForSearch.length > 0 ? allDuasForSearch : duas;
+    return selectedTag
+      ? pool.filter((dua) => dua.tags?.some((tag) => tag.name === selectedTag))
+      : pool;
+  }, [duas, selectedTag, allDuasForSearch]);
+
+  // The expensive step (building the Fuse index) — memoized on searchPool,
+  // so it survives keystrokes. Only queryDuaSearcher runs per keystroke.
+  const fuse = useMemo(() => createDuaSearcher(searchPool), [searchPool]);
+
   const filteredDuas = useMemo(() => {
-    let result = duas;
-
-    // Filter by tag first
-    if (selectedTag) {
-      const searchPool = allDuasForSearch.length > 0 ? allDuasForSearch : duas;
-      result = searchPool.filter((dua) =>
-        dua.tags?.some((tag) => tag.name === selectedTag)
-      );
-    }
-
-    // Then filter by search query
-    if (searchQuery.trim()) {
-      const searchPool = selectedTag
-        ? result
-        : allDuasForSearch.length > 0
-        ? allDuasForSearch
-        : duas;
-      result = searchDuas(searchPool, searchQuery);
-    }
-
-    return result;
-  }, [duas, searchQuery, selectedTag, allDuasForSearch]);
+    if (!debouncedQuery.trim()) return searchPool;
+    return queryDuaSearcher(fuse, debouncedQuery);
+  }, [searchPool, fuse, debouncedQuery]);
 
   const handleDelete = (id: string) => {
     setDuas((prev) => prev.filter((dua) => dua.id !== id));
     setAllDuasForSearch((prev) => prev.filter((dua) => dua.id !== id));
     setTotalCount((prev) => prev - 1);
+    fetchDueCount();
   };
 
   return (

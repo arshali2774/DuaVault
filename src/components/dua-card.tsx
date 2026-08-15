@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Pencil, Trash2, BookOpen } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/modal";
 import type { Dua } from "@/lib/supabase";
+import { formatTagName } from "@/lib/dua-tags";
 
 interface DuaCardProps {
   dua: Dua;
@@ -109,7 +110,7 @@ export function DuaCard({ dua, onDelete }: DuaCardProps) {
                   key={tag.id}
                   className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full"
                 >
-                  {tag.name.charAt(0).toUpperCase() + tag.name.slice(1)}
+                  {formatTagName(tag.name)}
                 </span>
               ))}
             </div>

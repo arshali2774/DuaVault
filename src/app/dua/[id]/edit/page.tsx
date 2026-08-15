@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { dbToApp } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
+import { fetchDuaWithTags } from "@/lib/duas";
 import { Navigation } from "@/components/navigation";
 import { DuaForm } from "@/components/dua-form";
 
@@ -12,25 +12,12 @@ export default async function EditDuaPage({ params }: EditDuaPageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("duas")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !data) {
+  const dua = await fetchDuaWithTags(supabase, id);
+  if (!dua) {
     notFound();
   }
 
-  // Fetch tags for this dua
-  const { data: duaTags } = await supabase
-    .from("dua_tags")
-    .select("tag_id, tags(*)")
-    .eq("dua_id", id);
-
-  const tagIds = duaTags?.map((dt) => dt.tag_id) || [];
-
-  const dua = dbToApp(data);
+  const tagIds = (dua.tags ?? []).map((t) => t.id);
 
   return (
     <div className="min-h-screen">

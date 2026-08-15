@@ -66,14 +66,16 @@ export function createDuaSearcher(duas: Dua[]) {
   return new Fuse(duasWithNormalized, fuseOptions);
 }
 
-// Search function that handles both exact and fuzzy matching
-export function searchDuas(duas: Dua[], query: string): Dua[] {
-  if (!query.trim()) {
-    return duas;
-  }
-
+// Query an already-built Fuse index for a non-empty query. Building the
+// index (createDuaSearcher) is the expensive step — callers on a hot path
+// (e.g. per-keystroke search) should memoize it separately and only call
+// this per query. Callers are responsible for the empty-query case (return
+// the unfiltered pool directly — there's nothing for Fuse to do there).
+export function queryDuaSearcher(
+  fuse: Fuse<DuaSearchItem>,
+  query: string
+): Dua[] {
   const normalizedQuery = normalizeForSearch(query);
-  const fuse = createDuaSearcher(duas);
 
   // Search with both original and normalized query
   const results = fuse.search(query);

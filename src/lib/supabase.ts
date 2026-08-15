@@ -42,7 +42,9 @@ export interface Dua {
   tags?: Tag[];
 }
 
-// Type for creating/updating a dua (camelCase for app, snake_case for DB)
+// Type for creating/updating a dua (camelCase for app, snake_case for DB).
+// Tag assignment isn't part of this interface — dua_tags writes happen
+// separately in each route, outside appToDb.
 export interface DuaInput {
   title: string;
   arabicText: string;
@@ -50,7 +52,6 @@ export interface DuaInput {
   transliteration?: string | null;
   description?: string | null;
   source?: string | null;
-  tagIds?: string[];
 }
 
 // Convert DB snake_case to app camelCase

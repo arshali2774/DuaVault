@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { dbToApp } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
+import { fetchDuaWithTags } from "@/lib/duas";
+import { formatTagName } from "@/lib/dua-tags";
 import { Navigation } from "@/components/navigation";
 import { Pencil, ArrowLeft, BookOpen } from "lucide-react";
 
@@ -13,17 +14,12 @@ export default async function DuaDetailPage({ params }: DuaDetailPageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("duas")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !data) {
+  const dua = await fetchDuaWithTags(supabase, id);
+  if (!dua) {
     notFound();
   }
 
-  const dua = dbToApp(data);
+  const tags = dua.tags ?? [];
 
   return (
     <div className="min-h-screen">
@@ -55,6 +51,20 @@ export default async function DuaDetailPage({ params }: DuaDetailPageProps) {
               <Pencil className="w-5 h-5" />
             </Link>
           </div>
+
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-6">
+              {tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full"
+                >
+                  {formatTagName(tag.name)}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Arabic Text */}
           <div className="bg-card border border-border rounded-2xl p-6 mb-6">

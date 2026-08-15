@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { Envelope, Lock } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthSubmit } from "@/lib/use-auth-submit";
+import { AuthShell, AuthIconInput } from "@/components/auth-shell";
 
 export default function SignupClient() {
   const [email, setEmail] = useState("");
@@ -31,13 +32,12 @@ export default function SignupClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold">Sign up for DuaVault</h1>
-
+    <AuthShell title="Sign up for DuaVault">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
+          <AuthIconInput
+            icon={Envelope}
             id="email"
             type="email"
             required
@@ -49,7 +49,8 @@ export default function SignupClient() {
 
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <AuthIconInput
+            icon={Lock}
             id="password"
             type="password"
             required
@@ -65,6 +66,6 @@ export default function SignupClient() {
           {isLoading ? "Signing up..." : "Sign up"}
         </Button>
       </form>
-    </div>
+    </AuthShell>
   );
 }

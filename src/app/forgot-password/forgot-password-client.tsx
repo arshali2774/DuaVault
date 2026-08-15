@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Envelope } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthSubmit } from "@/lib/use-auth-submit";
+import { AuthShell, AuthIconInput } from "@/components/auth-shell";
 
 export default function ForgotPasswordClient() {
   const [email, setEmail] = useState("");
@@ -31,17 +32,15 @@ export default function ForgotPasswordClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold">Reset your password</h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your email and we&apos;ll send you a link to reset your
-          password.
-        </p>
-
+    <AuthShell
+      title="Reset your password"
+      subtitle="Enter your email and we'll send you a link to reset your password."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
+          <AuthIconInput
+            icon={Envelope}
             id="email"
             type="email"
             required
@@ -63,6 +62,6 @@ export default function ForgotPasswordClient() {
           </Link>
         </p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

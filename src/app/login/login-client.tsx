@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Envelope, Lock } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthSubmit } from "@/lib/use-auth-submit";
+import { AuthShell, AuthIconInput } from "@/components/auth-shell";
 
 function safeRedirectTarget(raw: string | null) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
@@ -34,13 +35,12 @@ export default function LoginClient() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold">Log in to DuaVault</h1>
-
+    <AuthShell title="Log in to DuaVault">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
+          <AuthIconInput
+            icon={Envelope}
             id="email"
             type="email"
             required
@@ -52,7 +52,8 @@ export default function LoginClient() {
 
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <AuthIconInput
+            icon={Lock}
             id="password"
             type="password"
             required
@@ -80,6 +81,6 @@ export default function LoginClient() {
           </Link>
         </p>
       </form>
-    </div>
+    </AuthShell>
   );
 }

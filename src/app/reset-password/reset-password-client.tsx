@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { Lock } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthSubmit } from "@/lib/use-auth-submit";
+import { AuthShell, AuthIconInput } from "@/components/auth-shell";
 
 export default function ResetPasswordClient() {
   const [password, setPassword] = useState("");
@@ -34,23 +35,22 @@ export default function ResetPasswordClient() {
 
   if (!code) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <p className="text-center max-w-sm text-destructive">
+      <AuthShell title="Reset link invalid">
+        <p className="text-center text-sm text-destructive">
           This reset link is invalid or has expired. Please request a new
           one from the login page.
         </p>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-bold">Set a new password</h1>
-
+    <AuthShell title="Set a new password">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="password">New password</Label>
-          <Input
+          <AuthIconInput
+            icon={Lock}
             id="password"
             type="password"
             required
@@ -63,7 +63,8 @@ export default function ResetPasswordClient() {
 
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirm new password</Label>
-          <Input
+          <AuthIconInput
+            icon={Lock}
             id="confirmPassword"
             type="password"
             required
@@ -79,6 +80,6 @@ export default function ResetPasswordClient() {
           {isLoading ? "Resetting..." : "Reset password"}
         </Button>
       </form>
-    </div>
+    </AuthShell>
   );
 }

@@ -5,47 +5,31 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthSubmit } from "@/lib/use-auth-submit";
 
 export default function ResetPasswordClient() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
+  const { error, isLoading, submit, setError } = useAuthSubmit<{
+    code: string | null;
+    password: string;
+  }>("/api/auth/reset-password");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push("/");
-        router.refresh();
-      } else {
-        setError(data.error || "Something went wrong. Please try again.");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    submit({ code, password }, () => {
+      router.push("/");
+      router.refresh();
+    });
   };
 
   if (!code) {

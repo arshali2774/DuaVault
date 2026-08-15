@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthSubmit } from "@/lib/use-auth-submit";
 
 function safeRedirectTarget(raw: string | null) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
@@ -17,37 +18,19 @@ function safeRedirectTarget(raw: string | null) {
 export default function LoginClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = safeRedirectTarget(searchParams.get("redirect"));
+  const { error, isLoading, submit } = useAuthSubmit<{ email: string; password: string }>(
+    "/api/auth/login"
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push(redirectTo);
-        router.refresh();
-      } else {
-        setError(data.error || "Something went wrong. Please try again.");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    submit({ email, password }, () => {
+      router.push(redirectTo);
+      router.refresh();
+    });
   };
 
   return (

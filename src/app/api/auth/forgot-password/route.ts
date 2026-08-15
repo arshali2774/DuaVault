@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { buildSiteUrl, parseJsonBody } from "@/lib/auth-request";
 
 export async function POST(request: NextRequest) {
-  try {
-    const { email } = await request.json();
+  const result = await parseJsonBody<{ email: string }>(request);
+  if ("error" in result) {
+    return result.error;
+  }
+  const { email } = result.data;
 
+  try {
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     const supabase = await createClient();
-    // Derive from a fixed site-origin env var rather than request.url: the
-    // incoming Host header isn't guaranteed to match an entry in Supabase's
-    // redirect allow-list (e.g. Next's dev proxy rewrites it to localhost
-    // regardless of the host actually requested), which would silently
-    // bounce the email link to the site root instead of /reset-password.
-    const siteOrigin =
-      process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
-    const redirectTo = new URL("/reset-password", siteOrigin).toString();
+    const redirectTo = buildSiteUrl("/reset-password", request);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,

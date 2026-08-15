@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { parseJsonBody } from "@/lib/auth-request";
 
 export async function POST(request: NextRequest) {
-  try {
-    const { email, password } = await request.json();
+  const result = await parseJsonBody<{ email: string; password: string }>(
+    request
+  );
+  if ("error" in result) {
+    return result.error;
+  }
+  const { email, password } = result.data;
 
+  try {
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },

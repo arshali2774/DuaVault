@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbToApp, appToDb } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
 import { fetchDuaTags } from "@/lib/dua-tags";
+import { normalizeArabicText } from "@/lib/arabic-normalize";
+import { findDuplicateMatch } from "@/lib/duplicate-detection";
 
 const PAGE_SIZE = 20;
 
@@ -100,6 +102,7 @@ export async function POST(request: NextRequest) {
       description,
       source,
       tagIds,
+      confirmDuplicate,
     } = body;
 
     if (!title || !arabicText || !translation) {
@@ -109,17 +112,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedArabicText = normalizeArabicText(arabicText);
+
+    if (!confirmDuplicate) {
+      const match = await findDuplicateMatch(supabase, normalizedArabicText);
+      if (match) {
+        return NextResponse.json({ possibleDuplicate: match }, { status: 409 });
+      }
+    }
+
     const { data, error } = await supabase
       .from("duas")
       .insert([
-        appToDb({
-          title,
-          arabicText,
-          translation,
-          transliteration,
-          description,
-          source,
-        }),
+        {
+          ...appToDb({
+            title,
+            arabicText,
+            translation,
+            transliteration,
+            description,
+            source,
+          }),
+          normalized_arabic_text: normalizedArabicText,
+        },
       ])
       .select()
       .single();

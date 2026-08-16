@@ -22,6 +22,7 @@ export interface DbDua {
   repetitions: number;
   next_review_date: string | null;
   owner_id: string;
+  normalized_arabic_text: string | null;
 }
 
 // Type for Dua in application (camelCase) - used by client components

@@ -1,34 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  apiPost,
   createConfirmedUser,
+  createDua,
   deleteUser,
   getServiceClient,
   loginAsTestUser,
   type CookieJar,
   type TestUser,
 } from "./helpers";
-
-interface DuaPayload {
-  title: string;
-  arabicText: string;
-  translation: string;
-  transliteration?: string;
-  confirmDuplicate?: boolean;
-}
-
-interface PossibleDuplicateBody {
-  possibleDuplicate: {
-    id: string;
-    title: string;
-    arabicText: string;
-    translation: string;
-  };
-}
-
-function createDua(jar: CookieJar, payload: DuaPayload) {
-  return apiPost<PossibleDuplicateBody & { id: string }>("/api/duas", payload, jar);
-}
 
 describe("POST /api/duas duplicate detection", () => {
   let owner: TestUser;

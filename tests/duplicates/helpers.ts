@@ -76,13 +76,14 @@ export interface JsonResponse<T = unknown> {
   body: T;
 }
 
-export async function apiPost<T = unknown>(
+async function apiSend<T = unknown>(
+  method: "POST" | "PUT",
   path: string,
   body: unknown,
   jar?: CookieJar
 ): Promise<JsonResponse<T>> {
   const res = await fetch(`${process.env.DUPLICATES_TEST_BASE_URL}${path}`, {
-    method: "POST",
+    method,
     headers: {
       "Content-Type": "application/json",
       ...(jar?.header() ? { Cookie: jar.header() } : {}),
@@ -92,6 +93,57 @@ export async function apiPost<T = unknown>(
   jar?.capture(res);
   const text = await res.text();
   return { status: res.status, body: (text ? JSON.parse(text) : undefined) as T };
+}
+
+export function apiPost<T = unknown>(
+  path: string,
+  body: unknown,
+  jar?: CookieJar
+): Promise<JsonResponse<T>> {
+  return apiSend<T>("POST", path, body, jar);
+}
+
+export function apiPut<T = unknown>(
+  path: string,
+  body: unknown,
+  jar?: CookieJar
+): Promise<JsonResponse<T>> {
+  return apiSend<T>("PUT", path, body, jar);
+}
+
+// Shared request/response shapes for /api/duas, used by both
+// add-dua-duplicate.test.ts and edit-dua-duplicate.test.ts.
+export interface DuaPayload {
+  title: string;
+  arabicText: string;
+  translation: string;
+  transliteration?: string;
+  confirmDuplicate?: boolean;
+}
+
+export interface PossibleDuplicateBody {
+  possibleDuplicate: {
+    id: string;
+    title: string;
+    arabicText: string;
+    translation: string;
+  };
+}
+
+export function createDua(jar: CookieJar, payload: DuaPayload) {
+  return apiPost<PossibleDuplicateBody & { id: string }>(
+    "/api/duas",
+    payload,
+    jar
+  );
+}
+
+export function editDua(jar: CookieJar, id: string, payload: DuaPayload) {
+  return apiPut<PossibleDuplicateBody & { id: string }>(
+    `/api/duas/${id}`,
+    payload,
+    jar
+  );
 }
 
 // Logs a confirmed test user in via the app's own login route and returns

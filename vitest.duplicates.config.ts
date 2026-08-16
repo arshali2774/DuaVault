@@ -10,5 +10,9 @@ export default defineConfig({
     globalSetup: ["./tests/duplicates/global-setup.ts"],
     testTimeout: 30000,
     hookTimeout: 30000,
+    // All test files share one spawned dev server (see global-setup.ts);
+    // running files in parallel workers races requests against it. Same
+    // reasoning as tests/auth/vitest config.
+    fileParallelism: false,
   },
 });

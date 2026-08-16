@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbToApp, appToDb } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase-server";
 import { fetchDuaTagsForOne } from "@/lib/dua-tags";
+import { normalizeArabicText } from "@/lib/arabic-normalize";
+import { findDuplicateMatch } from "@/lib/duplicate-detection";
 
 // PUT - Update a dua
 export async function PUT(
@@ -21,6 +23,7 @@ export async function PUT(
       description,
       source,
       tagIds,
+      confirmDuplicate,
     } = body;
 
     if (!title || !arabicText || !translation) {
@@ -28,6 +31,15 @@ export async function PUT(
         { message: "Title, Arabic text, and translation are required" },
         { status: 400 }
       );
+    }
+
+    const normalizedArabicText = normalizeArabicText(arabicText);
+
+    if (!confirmDuplicate) {
+      const match = await findDuplicateMatch(supabase, normalizedArabicText, id);
+      if (match) {
+        return NextResponse.json({ possibleDuplicate: match }, { status: 409 });
+      }
     }
 
     const { data, error } = await supabase
@@ -41,6 +53,7 @@ export async function PUT(
           description,
           source,
         }),
+        normalized_arabic_text: normalizedArabicText,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
